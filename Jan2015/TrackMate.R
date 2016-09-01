@@ -51,19 +51,33 @@ t1[,c:=c(NA,(X[1:(.N-2)]),NA),by=A]
 t1[,d:=c(NA,(Y[1:(.N-2)]),NA),by=A]
 
 t1[, scalar:=(a-c)*(a-beadX)+(b-d)*(b-beadY)]
-t1[, angle:=acos(((a-c)*(a-beadX)+(b-d)*(b-beadY))/(sqrt((a-c)^2+(b-d)^2)*sqrt((a-beadX)^2+(b-beadY)^2)))*deg]
+t1[, det:=(a-c)*(a-beadX)-(b-d)*(b-beadY)]
+t1[, angle:= atan2(det, scalar)*deg]
 t1[, angle2:=c(NA, (na.locf(angle [1:(.N-1)])), NA), by=A]
-t1[, angs:=sin(angle2)]
+t1[, angs:=sin(angle2*pi/180)]
 
+t1[,a:=c(NA,(V[2:(.N)])),by=A]
+t1[,b:=c(NA,(V[1:(.N-1)])),by=A]
+
+t1[, Accel:=a-b]
 t1$a=NULL
 t1$b=NULL
 t1$c=NULL
 t1$d=NULL
 t1$scalar=NULL
+t1$det=NULL
 t1$angle=NULL
-t1$angle2=NULL
+
+#t1[, mag:= sqrt((a-c)^2+(b-d)^2)*sqrt((a-beadX)^2+(b-beadY)^2)]
+#t1[, div:= scalar/mag]
+#t1[, angleman:= acos(div)*deg]
+#t1[, angle:=acos(((a-c)*(a-beadX)+(b-d)*(b-beadY))/(sqrt((a-c)^2+(b-d)^2)*sqrt((a-beadX)^2+(b-beadY)^2)))*deg]
+
+
+#t1[, angc:=cos(angle2*pi/180)]
+#t1[, angatan:=atan2(angs, angc)]
 
 ##saving data
 VN<- readline("What data did you analyse?")
-Vid<-paste ("d:/Karen's/PhD/R program/Pheromone data/Processed_data/",VN,".csv")
+Vid<-paste ("d:/Karen's/PhD/R program/Pheromone data/Processed_data/trackdata/",VN,".csv")
 write.table(t1, Vid, sep=";", col.names=T, row.names=F)

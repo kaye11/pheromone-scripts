@@ -91,8 +91,9 @@ summary(pher8$gam)
 anova(pher8$gam)
 gam.check (pher8$gam)
 
-op=par(mfrow=c(2,1), mar=c(5.1,5.1,3.5,2.1))
-plot(pher8$gam, cex.lab=1.3, cex.axis=1.3)
+resize.win (8, 6)
+op=par(mfrow=c(2,1), mar=c(4.5,4.5,1.5,1.5))
+plot(pher8$gam, cex.lab=1.1, cex.axis=1.1, xlab ="Time (s)")
 
 
 summary(pher8$gam)
@@ -100,3 +101,26 @@ anova(pher8$gam)
 
 plot(pher8$lme)
 anova(pher8$lme)
+
+#plotting
+
+grid.newpage()
+text <- element_text(size = 20) #change the size of the axes
+theme_set(theme_bw()) 
+source("resizewin.R")
+
+resize.win(8,6)
+
+ggplot(data=angssumall, aes(x=time, y=mean, shape=cond)) + 
+  geom_point(size=5)+ 
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=20, size=1) +
+  scale_shape_discrete (name="Treatment") + geom_hline(yintercept=0, linetype="dotted", size=1)+
+  labs(list(x = "Time (s)", y = "Mean sine angle"))+
+  theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
+        axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
+        plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="bottom",
+        strip.text.x = text, strip.text.y = text, legend.title=element_blank(), legend.text=text, panel.margin=unit (0.5, "lines"),
+        legend.title=element_blank(),legend.key.width=unit(1,"cm"),legend.key.height=unit(0.8,"cm"),  
+        panel.grid.major = element_blank(),panel.margin.y = unit(1, "lines"), 
+        panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm")) + scale_x_continuous (breaks=c(200, 400, 600)) 
+

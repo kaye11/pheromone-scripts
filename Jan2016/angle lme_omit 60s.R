@@ -1,8 +1,10 @@
 #summaries and removing data points with contribution of just 1 track
 library(plyr)
 
-pher <- read.csv("D:/Karen's/PhD/R program/pheromone data/Processed_data/pherangs.csv", sep=";")
-pher2 <- na.omit(pher2)
+pher <- read.csv("D:/Karen's/PhD/R program/pheromone data/Processed_data/pherspeed.csv", sep=";")
+pher1 <- na.omit(pher)
+pher2 <- subset (pher1, pher1$time > 60, ) #exclude the first 60s
+
 
 angssumall <- ddply(pher2, c("cond", "time"), summarise,
                      N    = length(angs),
@@ -10,6 +12,14 @@ angssumall <- ddply(pher2, c("cond", "time"), summarise,
                      mean = mean(angs, na.rm=TRUE),
                      sd   = sd(angs, na.rm=TRUE),
                      se   = sd / sqrt(N))
+
+
+angssumall1 <- ddply(pher1, c("cond", "time"), summarise,
+                    N    = length(angs),
+                    ID   = length(unique(ID)),
+                    mean = mean(angs, na.rm=TRUE),
+                    sd   = sd(angs, na.rm=TRUE),
+                    se   = sd / sqrt(N))
 
 
 library(ggplot2)
@@ -27,6 +37,8 @@ source("summarySE.R")
 source("resizewin.R")
 
 resize.win(9,6)
+
+pher2$timef <- as.factor(pher2$time)
 
 qplot(timef, angs, color = cond, data = pher2,  geom = "boxplot") + facet_wrap(~cond, scales="free") 
 
@@ -70,6 +82,11 @@ pher2.lme <- lme (Form, random = ~1|ID, method="REML", correlation=corAR1(), phe
 
 pher6.lme <- lme (Form, random = ~1|ID,  weights=varIdent(form=~1|cond), 
                   correlation=corAR1 (), method="REML", data=pher2, na.action=na.omit) 
+
+#pher8.lme <- lme (Form, random = ~1|ID,  weights=varComb(varIdent(form=~1|cond), varIdent (form=~1|ID)),  correlation=corAR1 (), method="REML", data=pher2, na.action=na.omit) 
+
+#pher9.lme <- lme (Form, random = ~1|ID,  weights=varComb(varIdent(form=~1|cond), varIdent (form=~1|time)),  correlation=corAR1 (), method="REML", data=pher2, na.action=na.omit) 
+
 
 pher7.lme <- lme (Form, random = ~1|ID,  weights=varExp(form=~fitted(.)), 
                   correlation=corAR1 (), method="REML", data=pher2, na.action=na.omit)
@@ -118,33 +135,34 @@ pherangs.fit$lwr <- pherangs.fit$fit - (1.96 * pherangs.fit$se)
 pherangs.fit.combdata <- cbind(pher2, pherangs.fit)
 
 
-ggplot(data=angssumall, aes(x=time, y=mean, shape=cond, color=cond)) + geom_point(size=5)+ 
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=15, size=1) + 
+ggplot(data=angssumall1, aes(x=time, y=mean, shape=cond, color=cond)) + geom_point(size=5)+ 
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=15, size=1) + 
   geom_smooth(data=pherangs.fit.combdata, size=1,  aes(y=fit, ymin=lwr, ymax=upr, fill=cond), method="lm", stat="identity", alpha=0.2)+ 
   scale_colour_manual(values = c(Control="#f1a340", Diproline="#998ec3"), name="Treatment") +
-  scale_shape_discrete (name="Treatment") +
+  scale_shape_discrete (name="Treatment") + geom_hline(yintercept=0, size=1)+ 
   scale_fill_manual (values = c(Control="#f1a340", Diproline="#998ec3"), name="Treatment")+ 
   labs(list(x = "Time (s)", y = "Mean sine angle"))+ 
   theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
         axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
         plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="bottom",
-        strip.text.x = element_text(size=15), strip.text.y = text, legend.title=text, legend.text=text, panel.margin=unit (0.5, "lines"),
+        strip.text.x = element_text(size=15), strip.text.y = text, legend.title=element_blank(), 
+        legend.text=text, panel.margin=unit (0.5, "lines"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm")) + scale_x_continuous (breaks=c(200, 400, 600)) 
 
 #bw
 
-ggplot(data=angssumall, aes(x=time, y=mean, shape=cond)) + geom_point(size=5)+ 
+ggplot(data=angssumall1, aes(x=time, y=mean, shape=cond)) + geom_point(size=5)+ 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=20, size=1) + 
-  geom_smooth(data=pherangs.fit.combdata, size=1,  aes(y=fit, ymin=lwr, ymax=upr, linetype=cond), 
-              color="black", method="lm", stat="identity", alpha=0.2)+ facet_grid(cond~.)+
+  geom_smooth(data=pherangs.fit.combdata, size=1,  aes(y=fit, ymin=lwr, ymax=upr), 
+              color="black", method="lm", stat="identity", alpha=0.2)+ facet_grid(~cond)+
   scale_shape_discrete (name="Treatment") + geom_hline(yintercept=0, linetype="dotted", size=1)+ 
   scale_linetype_manual(values = c(Control="dashed", Diproline="solid"), name="Treatment")+
   labs(list(x = "Time (s)", y = "Mean sine angle"))+ 
   theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
         axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
         plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="none",
-        strip.text.x = element_text(size=15), strip.text.y = text, legend.title=text, legend.text=text, 
+        strip.text.x = element_text(size=20), strip.text.y = text, legend.title=text, legend.text=text, 
         legend.title=element_blank(),legend.key.width=unit(2,"cm"),legend.key.height=unit(0.8,"cm"),  
         panel.margin=unit (0.5, "lines"), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm")) + scale_x_continuous (breaks=c(200, 400, 600)) 

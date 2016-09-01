@@ -30,14 +30,28 @@ ggplot (data=all, aes(x=rad2, y=nMsq))+geom_line(size=2)+
 
 difall<- summarySE(all, measurevar="nMsq", groupvars=c("rad2"), na.rm=TRUE)
 
-ggplot(data=difall, aes(x=rad2, y=nMsq)) + geom_line(size=0.8)+ 
+ggplot(data=difall, aes(x=rad2, y=nMsq)) + geom_line(size=1)+ 
   geom_ribbon(aes(ymin=nMsq-sd, ymax=nMsq+sd), alpha=0.5, size=3) +  
   labs(x="Distance from bead (µm)", 
        y="nM diproline")+
-  theme(axis.text=element_text(size=15), axis.title=element_text(size=25,face="bold"), 
-        plot.title = element_text(size =25, face="bold"),legend.position=c(0.12,0.10), 
-        legend.key.width=unit(2,"cm"),legend.key.height=unit(0.8,"cm"),  
-        strip.text.x = text, strip.text.y = text, legend.title=element_blank(), legend.text=text, panel.margin=unit(1, "lines"), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
+        axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
+        plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="none", legend.direction="horizontal",
+        legend.title=element_blank(),legend.key.width=unit(1.8,"cm"),legend.key.height=unit(0.8,"cm"),  
+        strip.text.x = text, strip.text.y = text, legend.title=text, legend.text=text, panel.margin=unit (0.5, "lines"),
+        panel.grid.major = element_blank(),panel.margin.y = unit(1, "lines"), 
+        panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm"))
 
+
+#for poster
+
+ggplot(data=difall, aes(x=rad2, y=nMsq)) + geom_line(size=2)+ 
+    labs(x="Distance from bead (µm)", 
+       y="nM diproline/bead")+ scale_x_continuous(breaks = c(0, 100,200))+
+  theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
+        axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
+        plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="none", legend.direction="horizontal",
+        legend.title=element_blank(),legend.key.width=unit(1.8,"cm"),legend.key.height=unit(0.8,"cm"),  
+        strip.text.x = text, strip.text.y = text, legend.title=text, legend.text=text, panel.margin=unit (0.5, "lines"),
+        panel.grid.major = element_blank(),panel.margin.y = unit(1, "lines"), 
+        panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm"))

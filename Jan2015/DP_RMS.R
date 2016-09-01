@@ -1,4 +1,5 @@
 NM <- read.csv("d:/Karen's/PhD/R program/Pheromone data/Processed_data/HLBspeed.csv", sep=";")
+NM <- subset(NM, NM$T>60, )
 
 
 
@@ -19,11 +20,11 @@ library(plyr)
 NM$A = as.factor(NM$A)
 
 #subset data into time points to save convergence failures
-SD <- subset (NM, NM$time<361) 
-#SD <- subset (NM, NM$time>120 & NM$time<241)
-#SD <- subset (NM, NM$time>240 & NM$time<361)
-#SD <- subset (NM, NM$time>360 & NM$time<481)
-#SD <- subset (NM, NM$time>480 & NM$time<601)
+SD <- subset (NM, NM$T<410, ) 
+#SD <- subset (NM, NM$T>120 & NM$T<241)
+#SD <- subset (NM, NM$T>240 & NM$T<361)
+#SD <- subset (NM, NM$T>360 & NM$T<481)
+#SD <- subset (NM, NM$T>480 & NM$T<601)
 
 NM=SD
 
@@ -35,7 +36,7 @@ Vmean=mean(NM$V, na.rm = TRUE)
 NM$ND2=NM$ND*NM$ND
 
 # make the mean ND2 for each timestep over all tracks
-Rdata3 = aggregate(NM$ND2, by = list(time = NM$time), mean, na.action = na.omit)
+Rdata3 = aggregate(NM$ND2, by = list(time = NM$T), mean, na.action = na.omit)
 Rdata3$RMS = sqrt(Rdata3$x)
 
 
@@ -69,7 +70,7 @@ write.table(TA, "d:/Karen's/PhD/R program/Pheromone data/trackanalysis.csv",
 
 ##Export Rdata3
 RM2<- readline("What RMS data is this?")
-RM3<- paste("d:/Karen's/PhD//R program/Pheromone data/Processed_data/RMS data/",RM2,".csv")
+RM3<- paste("d:/Karen's/PhD/R program/Pheromone data/Processed_data/RMS data/",RM2,".csv")
 write.table(Rdata3, RM3, sep=";", row.names = F)
 
 ## Summary

@@ -47,15 +47,20 @@ NT<-data.table(pher, key=c("ID"))
 t1=NT[,list(treatment=treatment2, T=T, T.factor=T.factor, ID=ID, Cells=Cells, CellsS=CellsS,
             CellsBase=(CellsS-CellsS[1])), by=c("ID")]
 
-pherbase <- t1 #DATA IS NOW CALLED pherBASE
+pherbase1 <- t1 #DATA IS NOW CALLED pherBASE
+pherbase <- subset(pherbase, pherbase$T>60, )
+
 
 qplot(T.factor,CellsBase, color = treatment, data = pherbase,  geom = "boxplot") + facet_wrap(~treatment) +
   stat_smooth (method="loess", formula=y~x, size=1, aes(group=1))
+
+
 
 #summary
 source("summarySE.R")
 
 pherbase.sum <- summarySE(pherbase, measurevar="CellsBase", groupvars=c("T", "treatment"))
+pherbase1.sum <- summarySE(pherbase1, measurevar="CellsBase", groupvars=c("T", "treatment"))
 
 ggplot(data=pherbase.sum, aes(x=T, y=CellsBase, shape=treatment, color=treatment)) + geom_point(size=5)+ 
   geom_errorbar(aes(ymin=CellsBase-se, ymax=CellsBase+se), width=10, size=1) + facet_grid(~treatment)
@@ -91,8 +96,6 @@ pherbase1.lme <- lme (Form, random = ~1|ID, method="REML", data=pherbase)
 
 pherbase2.lme <- lme (Form, random = ~1|ID, correlation=corAR1(), method="REML", data=pherbase)
 
-pherbase21.lme <- lme (Form, random = ~1|ID, correlation=corAR1(form=~1|ID/treatment), method="REML", data=pherbase)#same with pherbase2.lme
-
 #pherbase3.lme <- lme (Form, random = ~1|ID,  weights=varIdent(form=~1|ID), correlation=corAR1 (), method="REML", data=pherbase) 
 
 #pherbase4.lme <- lme (Form, random = ~1|ID,  weights=varIdent(form=~1|T), correlation=corAR1 (), method="REML", data=pherbase) 
@@ -100,17 +103,19 @@ pherbase21.lme <- lme (Form, random = ~1|ID, correlation=corAR1(form=~1|ID/treat
 pherbase5.lme <- lme (Form, random = ~1|ID,  weights=varIdent(form=~1|treatment), 
                       correlation=corAR1(), method="REML", data=pherbase) #best is A5 
 
+#pherbase6.lme <- lme (Form, random = ~1|ID,  weights=varComb(varIdent(form=~1|treatment), varIdent (form=~1|ID)), correlation=corAR1(), method="REML", data=pherbase) 
+
+#pherbase7.lme <- lme (Form, random = ~1|ID,  weights=varComb(varIdent(form=~1|treatment), varIdent (form=~1|T)), correlation=corAR1(), method="REML", data=pherbase) 
+
+anova(pherbase.gls, pherbase1.lme, pherbase2.lme, pherbase5.lme) #best is pherbase2.lme
 
 
-anova(pherbase.gls, pherbase1.lme, pherbase2.lme, pherbase21.lme,  pherbase5.lme) #best is pherbase5.lme 
-
-
-summary(pherbase5.lme)
-anova(pherbase5.lme)
+summary(pherbase2.lme)
+anova(pherbase2.lme)
 
 
 #residuals
-pherbase.E2<-resid(pherbase5.lme,type="normalized")
+pherbase.E2<-resid(pherbase2.lme,type="normalized")
 pherbase.F2<-fitted(pherbase2.lme)
 op<-par(mfrow=c(2,2),mar=c(4,4,3,2))
 MyYlab="Residuals"
@@ -140,7 +145,7 @@ resize.win(9, 6)
 
 #pherbase fit
 
-pherbase.fit <- as.data.frame(predictSE.lme(pherbase5.lme, pherbase, se.fit = TRUE, level = 0,
+pherbase.fit <- as.data.frame(predictSE.lme(pherbase2.lme, pherbase, se.fit = TRUE, level = 0,
                                             print.matrix = FALSE))
 
 pherbase.fit$upr <- pherbase.fit$fit + (1.96 * pherbase.fit$se)
@@ -149,7 +154,7 @@ pherbase.fit$lwr <- pherbase.fit$fit - (1.96 * pherbase.fit$se)
 pherbase.fit.combdata <- cbind(pherbase, pherbase.fit)
 
 
-ggplot(data=pherbase.sum, aes(x=T, y=CellsBase, shape=treatment, color=treatment)) + geom_point(size=5)+ 
+ggplot(data=pherbase1.sum, aes(x=T, y=CellsBase, shape=treatment, color=treatment)) + geom_point(size=5)+ 
   geom_errorbar(aes(ymin=CellsBase-se, ymax=CellsBase+se), width=15, size=1) + 
   geom_smooth(data=pherbase.fit.combdata, size=1,  aes(y=fit, ymin=lwr, ymax=upr, fill=treatment), method="lm", stat="identity", alpha=0.2)+ 
   scale_colour_manual(values = c(Control="#f1a340", Diproline="#998ec3"), name="Treatment") +
@@ -159,13 +164,15 @@ ggplot(data=pherbase.sum, aes(x=T, y=CellsBase, shape=treatment, color=treatment
   theme(axis.text=element_text(size=20), axis.title.y=element_text(size=20,face="bold", vjust=1.5), 
         axis.title.x=element_text(size=20,face="bold", vjust=-0.5),
         plot.title = element_text(size =20, face="bold"), axis.text=text,  legend.position="bottom",
-        strip.text.x = element_text(size=15), strip.text.y = text, legend.title=text, legend.text=text, panel.margin=unit (0.5, "lines"),
+        strip.text.x = element_text(size=15), strip.text.y = text, legend.title=element_blank(), 
+        legend.text=text, panel.margin=unit (0.5, "lines"),
         panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm")) + scale_x_continuous (breaks=c(200, 400, 600)) 
+        panel.grid.minor = element_blank(), plot.margin = unit(c(1,1,1,1), "cm")) + 
+  scale_x_continuous (breaks=c(200, 400, 600)) 
 
 #bw
 resize.win(8,6)
-ggplot(data=pherbase.sum, aes(x=T, y=CellsBase, shape=treatment)) + geom_point(size=5)+ 
+ggplot(data=pherbase1.sum, aes(x=T, y=CellsBase, shape=treatment)) + geom_point(size=5)+ 
   geom_errorbar(aes(ymin=CellsBase-se, ymax=CellsBase+se), width=15, size=1) + 
   geom_smooth(data=pherbase.fit.combdata, size=1,  aes(y=fit, ymin=lwr, ymax=upr, linetype=treatment), 
               color="black", method="lm", stat="identity", alpha=0.2)+ 
